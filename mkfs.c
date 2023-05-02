@@ -30,17 +30,17 @@
 
 /** Command line options. */
 typedef struct mkfs_opts {
-	/** File system image file path. */
-	const char *img_path;
-	/** Number of inodes. */
-	size_t n_inodes;
+    /** File system image file path. */
+    const char *img_path;
+    /** Number of inodes. */
+    size_t n_inodes;
 
-	/** Print help and exit. */
-	bool help;
-	/** Overwrite existing file system. */
-	bool force;
-	/** Zero out image contents. */
-	bool zero;
+    /** Print help and exit. */
+    bool help;
+    /** Overwrite existing file system. */
+    bool force;
+    /** Zero out image contents. */
+    bool zero;
 
 } mkfs_opts;
 
@@ -74,51 +74,51 @@ Options:\n\
 
 static void print_help(FILE *f, const char *progname)
 {
-	fprintf(f, help_str, progname, A1FS_BLOCK_SIZE);
+    fprintf(f, help_str, progname, A1FS_BLOCK_SIZE);
 }
 
 
 static bool parse_args(int argc, char *argv[], mkfs_opts *opts)
 {
-	char o;
-	while ((o = getopt(argc, argv, "i:hfvz")) != -1) {
-		switch (o) {
-			case 'i': opts->n_inodes = strtoul(optarg, NULL, 10); break;
+    char o;
+    while ((o = getopt(argc, argv, "i:hfvz")) != -1) {
+        switch (o) {
+            case 'i': opts->n_inodes = strtoul(optarg, NULL, 10); break;
 
-			case 'h': opts->help  = true; return true;// skip other arguments
-			case 'f': opts->force = true; break;
-			case 'z': opts->zero  = true; break;
+            case 'h': opts->help  = true; return true;// skip other arguments
+            case 'f': opts->force = true; break;
+            case 'z': opts->zero  = true; break;
 
-			case '?': return false;
-			default : assert(false);
-		}
-	}
+            case '?': return false;
+            default : assert(false);
+        }
+    }
 
-	if (optind >= argc) {
-		fprintf(stderr, "Missing image path\n");
-		return false;
-	}
-	opts->img_path = argv[optind];
+    if (optind >= argc) {
+        fprintf(stderr, "Missing image path\n");
+        return false;
+    }
+    opts->img_path = argv[optind];
 
-	if (opts->n_inodes == 0) {
-		fprintf(stderr, "Missing or invalid number of inodes\n");
-		return false;
-	}
-	return true;
+    if (opts->n_inodes == 0) {
+        fprintf(stderr, "Missing or invalid number of inodes\n");
+        return false;
+    }
+    return true;
 }
 
 
 /** Determine if the image has already been formatted into a1fs. */
 static bool a1fs_is_present(void *image)
 {
-	//TODO: check if the image already contains a valid a1fs superblock
+    //TODO: check if the image already contains a valid a1fs superblock
     struct a1fs_superblock * superblock = (struct a1fs_superblock *)(image);
     if(superblock->magic & A1FS_MAGIC)
     {
         return true;
     }
 
-	return false;
+    return false;
 }
 
 
@@ -135,10 +135,10 @@ static bool a1fs_is_present(void *image)
  */
 static bool mkfs(void *image, size_t size, mkfs_opts *opts)
 {
-	//TODO: initialize the superblock and create an empty root directory
-	//NOTE: the mode of the root directory inode should be set to S_IFDIR | 0777
+    //TODO: initialize the superblock and create an empty root directory
+    //NOTE: the mode of the root directory inode should be set to S_IFDIR | 0777
 
-	// opts includes char * img_path, size_t n_inodes, other fields not necessary
+    // opts includes char * img_path, size_t n_inodes, other fields not necessary
     // relevant information is size_t n_inodes and size_t size,
 
     size_t n_inodes = opts->n_inodes;
@@ -196,7 +196,7 @@ static bool mkfs(void *image, size_t size, mkfs_opts *opts)
         int which_bit = j % 8;
         int offset = j/8;
         unsigned char * inode_block_bitmap_byte = (unsigned char *)(image +
-                (superblock.inode_block_bitmap * A1FS_BLOCK_SIZE) + offset);
+                                                                    (superblock.inode_block_bitmap * A1FS_BLOCK_SIZE) + offset);
         if(*inode_block_bitmap_byte & (1<< which_bit))
         {
             printf("%d-th bit: 1\n", j);
@@ -218,7 +218,7 @@ static bool mkfs(void *image, size_t size, mkfs_opts *opts)
         int which_bit = i % 8;
         int offset = i/8;
         unsigned char * data_block_bitmap_byte = (unsigned char *)(image +
-                (superblock.data_block_bitmap * A1FS_BLOCK_SIZE) + offset);
+                                                                   (superblock.data_block_bitmap * A1FS_BLOCK_SIZE) + offset);
         *data_block_bitmap_byte |= (1 << which_bit);
 //        printf("curr_val of data_block_bitmap_byte: %u, offset: %d\n", *data_block_bitmap_byte, offset);
         //set i-th bit in data block bitmap to 1
@@ -234,7 +234,7 @@ static bool mkfs(void *image, size_t size, mkfs_opts *opts)
         int which_bit = j % 8;
         int offset = j/8;
         unsigned char * data_block_bitmap_byte = (unsigned char *)(image +
-                                    (superblock.data_block_bitmap * A1FS_BLOCK_SIZE) + offset);
+                                                                   (superblock.data_block_bitmap * A1FS_BLOCK_SIZE) + offset);
         if(*data_block_bitmap_byte & (1<< which_bit))
         {
             printf("%d-th bit: 1\n", j);
@@ -264,9 +264,6 @@ static bool mkfs(void *image, size_t size, mkfs_opts *opts)
     memcpy(image + (superblock.inode_table * A1FS_BLOCK_SIZE), &root_inode, sizeof(a1fs_inode));
 
 
-    if(root_inode.mode & A1FS_S_IFDIR){
-        printf("Noice!\n");
-    }
     return true;
 
 //    (void)image;
@@ -278,38 +275,38 @@ static bool mkfs(void *image, size_t size, mkfs_opts *opts)
 
 int main(int argc, char *argv[])
 {
-	mkfs_opts opts = {0};// defaults are all 0
-	if (!parse_args(argc, argv, &opts)) {
-		// Invalid arguments, print help to stderr
-		print_help(stderr, argv[0]);
-		return 1;
-	}
-	if (opts.help) {
-		// Help requested, print it to stdout
-		print_help(stdout, argv[0]);
-		return 0;
-	}
+    mkfs_opts opts = {0};// defaults are all 0
+    if (!parse_args(argc, argv, &opts)) {
+        // Invalid arguments, print help to stderr
+        print_help(stderr, argv[0]);
+        return 1;
+    }
+    if (opts.help) {
+        // Help requested, print it to stdout
+        print_help(stdout, argv[0]);
+        return 0;
+    }
 
-	// Map image file into memory
-	size_t size;
-	void *image = map_file(opts.img_path, A1FS_BLOCK_SIZE, &size);
-	if (image == NULL) return 1;
+    // Map image file into memory
+    size_t size;
+    void *image = map_file(opts.img_path, A1FS_BLOCK_SIZE, &size);
+    if (image == NULL) return 1;
 
-	// Check if overwriting existing file system
-	int ret = 1;
-	if (!opts.force && a1fs_is_present(image)) {
-		fprintf(stderr, "Image already contains a1fs; use -f to overwrite\n");
-		goto end;
-	}
+    // Check if overwriting existing file system
+    int ret = 1;
+    if (!opts.force && a1fs_is_present(image)) {
+        fprintf(stderr, "Image already contains a1fs; use -f to overwrite\n");
+        goto end;
+    }
 
-	if (opts.zero) memset(image, 0, size);
-	if (!mkfs(image, size, &opts)) {
-		fprintf(stderr, "Failed to format the image\n");
-		goto end;
-	}
+    if (opts.zero) memset(image, 0, size);
+    if (!mkfs(image, size, &opts)) {
+        fprintf(stderr, "Failed to format the image\n");
+        goto end;
+    }
 
-	ret = 0;
-end:
-	munmap(image, size);
-	return ret;
+    ret = 0;
+    end:
+    munmap(image, size);
+    return ret;
 }

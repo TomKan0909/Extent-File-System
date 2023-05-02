@@ -57,14 +57,14 @@
  */
 static bool a1fs_init(fs_ctx *fs, a1fs_opts *opts)
 {
-	// Nothing to initialize if only printing help
-	if (opts->help) return true;
+    // Nothing to initialize if only printing help
+    if (opts->help) return true;
 
-	size_t size;
-	void *image = map_file(opts->img_path, A1FS_BLOCK_SIZE, &size);
-	if (!image) return false;
+    size_t size;
+    void *image = map_file(opts->img_path, A1FS_BLOCK_SIZE, &size);
+    if (!image) return false;
 
-	return fs_ctx_init(fs, image, size);
+    return fs_ctx_init(fs, image, size);
 }
 
 /**
@@ -75,17 +75,17 @@ static bool a1fs_init(fs_ctx *fs, a1fs_opts *opts)
  */
 static void a1fs_destroy(void *ctx)
 {
-	fs_ctx *fs = (fs_ctx*)ctx;
-	if (fs->image) {
-		munmap(fs->image, fs->size);
-		fs_ctx_destroy(fs);
-	}
+    fs_ctx *fs = (fs_ctx*)ctx;
+    if (fs->image) {
+        munmap(fs->image, fs->size);
+        fs_ctx_destroy(fs);
+    }
 }
 
 /** Get file system context. */
 static fs_ctx *get_fs(void)
 {
-	return (fs_ctx*)fuse_get_context()->private_data;
+    return (fs_ctx*)fuse_get_context()->private_data;
 }
 
 
@@ -106,23 +106,23 @@ static fs_ctx *get_fs(void)
  */
 static int a1fs_statfs(const char *path, struct statvfs *st)
 {
-	(void)path;// unused
-	fs_ctx *fs = get_fs();
+    (void)path;// unused
+    fs_ctx *fs = get_fs();
 
-	memset(st, 0, sizeof(*st));
-	st->f_bsize   = A1FS_BLOCK_SIZE;
-	st->f_frsize  = A1FS_BLOCK_SIZE;
-	//TODO: fill in the rest of required fields based on the information stored
-	// in the superblock
-	const struct a1fs_superblock * superblock = (const struct  a1fs_superblock *)(fs->image);
-	st->f_blocks = superblock->blocks_count;
-	st->f_bfree = superblock->free_blocks_count;
-	st->f_bavail = superblock->free_blocks_count;
-	st->f_files = superblock->inodes_count;
-	st->f_ffree = superblock->free_inodes_count;
-	st->f_favail = superblock->free_inodes_count;
-	st->f_namemax = A1FS_NAME_MAX;
-	return 0;
+    memset(st, 0, sizeof(*st));
+    st->f_bsize   = A1FS_BLOCK_SIZE;
+    st->f_frsize  = A1FS_BLOCK_SIZE;
+    //TODO: fill in the rest of required fields based on the information stored
+    // in the superblock
+    const struct a1fs_superblock * superblock = (const struct  a1fs_superblock *)(fs->image);
+    st->f_blocks = superblock->blocks_count;
+    st->f_bfree = superblock->free_blocks_count;
+    st->f_bavail = superblock->free_blocks_count;
+    st->f_files = superblock->inodes_count;
+    st->f_ffree = superblock->free_inodes_count;
+    st->f_favail = superblock->free_inodes_count;
+    st->f_namemax = A1FS_NAME_MAX;
+    return 0;
 
 //	return -ENOSYS;
 }
@@ -159,8 +159,8 @@ uint16_t path_to_inode_id(char * path, void* image)
     int explored_dir_entry = 0;
     int nod_in_db = A1FS_BLOCK_SIZE/ sizeof(a1fs_dentry); /* number of directory entries in one data block*/
     struct a1fs_extent * first_extent = (struct a1fs_extent *)(image +
-                                                 (superblock->data_block * A1FS_BLOCK_SIZE) +
-                                                 (curr_file_inode->extent_table_start * A1FS_BLOCK_SIZE));
+                                                               (superblock->data_block * A1FS_BLOCK_SIZE) +
+                                                               (curr_file_inode->extent_table_start * A1FS_BLOCK_SIZE));
     bool found = false;
 
     while(pch != NULL)
@@ -188,8 +188,8 @@ uint16_t path_to_inode_id(char * path, void* image)
                 while (explored_dir_entry < number_of_directory_entries && counter < nod_in_db)
                 {
                     const struct a1fs_dentry * dentry = (const struct a1fs_dentry *)(image +
-                                         (superblock->data_block * A1FS_BLOCK_SIZE) + (j * A1FS_BLOCK_SIZE) +
-                                         (counter * sizeof(a1fs_dentry)));
+                                                                                     (superblock->data_block * A1FS_BLOCK_SIZE) + (j * A1FS_BLOCK_SIZE) +
+                                                                                     (counter * sizeof(a1fs_dentry)));
                     // Check current dir_entry is a valid directory entry, in other words it was not deleted
                     if (dentry->ino != -1)
                     {
@@ -199,10 +199,10 @@ uint16_t path_to_inode_id(char * path, void* image)
                         {
                             curr_inode_id = dentry->ino;
                             curr_file_inode = (struct a1fs_inode *)(image +
-                              (superblock->inode_table * A1FS_BLOCK_SIZE) + curr_inode_id * sizeof(struct a1fs_inode));
+                                                                    (superblock->inode_table * A1FS_BLOCK_SIZE) + curr_inode_id * sizeof(struct a1fs_inode));
                             first_extent = (struct a1fs_extent *)(image +
-                                                        (superblock->data_block * A1FS_BLOCK_SIZE) +
-                                                        (curr_file_inode->extent_table_start * A1FS_BLOCK_SIZE));
+                                                                  (superblock->data_block * A1FS_BLOCK_SIZE) +
+                                                                  (curr_file_inode->extent_table_start * A1FS_BLOCK_SIZE));
                             number_of_directory_entries = curr_file_inode->size/sizeof(a1fs_dentry);
                             explored_dir_entry = 0;
                             used_extent_count = curr_file_inode->used_extent_count;
@@ -240,7 +240,7 @@ a1fs_inode *get_inode_with_id(uint16_t inode_id, void* image)
 {
     struct a1fs_superblock *superblock = (struct a1fs_superblock *)(image);
     struct a1fs_inode *inode = (struct a1fs_inode *)(image + (superblock->inode_table * A1FS_BLOCK_SIZE) +
-            (inode_id * sizeof(a1fs_inode)));
+                                                     (inode_id * sizeof(a1fs_inode)));
     return inode;
 }
 
@@ -255,7 +255,7 @@ int64_t available_inode(void* image)
         int which_bit = j%8;
         int offset = j/8;
         unsigned char * inode_block_bitmap_byte = (unsigned char *)(image +
-                (superblock->inode_block_bitmap * A1FS_BLOCK_SIZE) + offset);
+                                                                    (superblock->inode_block_bitmap * A1FS_BLOCK_SIZE) + offset);
         if(!(*inode_block_bitmap_byte & (1<< which_bit)))
         {
             return j;
@@ -263,7 +263,6 @@ int64_t available_inode(void* image)
         j++;
 
     }
-    printf("Not enough Inodes\n");
     return -ENOSPC;
 }
 
@@ -278,7 +277,7 @@ int64_t available_data_block(void * image)
         int which_bit = j % 8;
         int offset = j / 8;
         unsigned char * data_block_bitmap_byte = (unsigned char *)(image +
-                                            (superblock->data_block_bitmap * A1FS_BLOCK_SIZE) + offset);
+                                                                   (superblock->data_block_bitmap * A1FS_BLOCK_SIZE) + offset);
         if(!(*data_block_bitmap_byte & (1<< which_bit)))
         {
             return j - superblock->data_block;
@@ -286,7 +285,6 @@ int64_t available_data_block(void * image)
         j++;
 
     }
-    printf("Not enough DB in available_data_blocks\n");
     return -ENOSPC;
 }
 
@@ -297,7 +295,7 @@ int check_data_block(void * image, uint16_t pos)
     int which_bit = pos % 8;
     int offset = pos / 8;
     unsigned char * data_block_bitmap_byte = (unsigned char *)(image +
-                           (superblock->data_block_bitmap * A1FS_BLOCK_SIZE) + offset);
+                                                               (superblock->data_block_bitmap * A1FS_BLOCK_SIZE) + offset);
     if(*data_block_bitmap_byte & (1 << which_bit))
     {
         return 1;
@@ -315,7 +313,7 @@ void set_inode_bitmap(void* image, uint16_t pos, int flag)
     int which_bit = pos % 8;
     int offset = pos / 8;
     unsigned char * inode_block_bitmap_byte = (unsigned char *)(image +
-            (superblock->inode_block_bitmap * A1FS_BLOCK_SIZE) + offset);
+                                                                (superblock->inode_block_bitmap * A1FS_BLOCK_SIZE) + offset);
     if(flag == 1)
     {
         *inode_block_bitmap_byte |= (1 << which_bit);
@@ -335,7 +333,7 @@ void set_data_block_bitmap(void* image, uint16_t pos, int flag)
     int which_bit = pos % 8;
     int offset = pos / 8;
     unsigned char * data_block_bitmap_byte = (unsigned char *)(image +
-                                (superblock->data_block_bitmap * A1FS_BLOCK_SIZE) + offset);
+                                                               (superblock->data_block_bitmap * A1FS_BLOCK_SIZE) + offset);
     if(flag == 1)
     {
         *data_block_bitmap_byte |= (1 << which_bit);
@@ -381,7 +379,7 @@ int write_dir_entry_to_parent(struct a1fs_inode * p_inode, struct a1fs_dentry * 
         }
         set_data_block_bitmap(image, data_block, 1);
         memcpy(image + (superblock->data_block * A1FS_BLOCK_SIZE ) + (data_block * A1FS_BLOCK_SIZE),
-        new_dentry, sizeof(a1fs_dentry));
+               new_dentry, sizeof(a1fs_dentry));
 
         // write extent information to extent table and update p_inode metadata
         p_inode->used_extent_count++;
@@ -402,7 +400,7 @@ int write_dir_entry_to_parent(struct a1fs_inode * p_inode, struct a1fs_dentry * 
 
 
     struct a1fs_extent * p_first_extent = (struct a1fs_extent *)(image +
-            (superblock->data_block * A1FS_BLOCK_SIZE) + (p_inode->extent_table_start * A1FS_BLOCK_SIZE));
+                                                                 (superblock->data_block * A1FS_BLOCK_SIZE) + (p_inode->extent_table_start * A1FS_BLOCK_SIZE));
     struct a1fs_extent * curr_extent;
 
     int last_data_block = -1;
@@ -427,8 +425,8 @@ int write_dir_entry_to_parent(struct a1fs_inode * p_inode, struct a1fs_dentry * 
             while (explored_dir_entry < number_of_directory_entries && counter < nod_in_db)
             {
                 const struct a1fs_dentry *dentry = (const struct a1fs_dentry *) (image +
-                     (superblock->data_block *A1FS_BLOCK_SIZE) + (j * A1FS_BLOCK_SIZE) +
-                     (counter * sizeof(a1fs_dentry)));
+                                                                                 (superblock->data_block *A1FS_BLOCK_SIZE) + (j * A1FS_BLOCK_SIZE) +
+                                                                                 (counter * sizeof(a1fs_dentry)));
 
                 // Current dentry was previous deleted, therefore we can overwrite
                 if(dentry->ino == -1)
@@ -451,7 +449,7 @@ int write_dir_entry_to_parent(struct a1fs_inode * p_inode, struct a1fs_dentry * 
     if(x != 0) // Last data block has available space
     {
         memcpy(image + (superblock->data_block * A1FS_BLOCK_SIZE) + (last_data_block * A1FS_BLOCK_SIZE) +
-                       (x * sizeof(a1fs_dentry)), new_dentry, sizeof(a1fs_dentry));
+               (x * sizeof(a1fs_dentry)), new_dentry, sizeof(a1fs_dentry));
         // update parent inode size, links, mtime, used extent count
         p_inode->links++;
         p_inode->size += sizeof(a1fs_dentry);
@@ -467,7 +465,7 @@ int write_dir_entry_to_parent(struct a1fs_inode * p_inode, struct a1fs_dentry * 
             curr_extent->count++;
             // write directory entry to last_data_block + 1
             memcpy(image + (superblock->data_block * A1FS_BLOCK_SIZE) +
-            ((last_data_block + 1) * A1FS_BLOCK_SIZE), new_dentry, sizeof(a1fs_dentry));
+                   ((last_data_block + 1) * A1FS_BLOCK_SIZE), new_dentry, sizeof(a1fs_dentry));
             //update p_inode metadata
             p_inode->links++;
             p_inode->size += sizeof(a1fs_dentry);
@@ -503,13 +501,13 @@ int write_dir_entry_to_parent(struct a1fs_inode * p_inode, struct a1fs_dentry * 
         }
 
         // Check if last data blk + 1 is free
-            // if free modify last extent to start, end + 1
-            // go to data block end + 1 and write directory entry
-            // udpate superblock free block ++
-            // if last data blk + 1 not free
-            // allocate new data blk
-            // write next extent to extent table for p_inode
-            // got to data block of new extent
+        // if free modify last extent to start, end + 1
+        // go to data block end + 1 and write directory entry
+        // udpate superblock free block ++
+        // if last data blk + 1 not free
+        // allocate new data blk
+        // write next extent to extent table for p_inode
+        // got to data block of new extent
     }
     return 0;
 
@@ -530,8 +528,8 @@ void remove_inode(uint16_t c_inode_id, struct a1fs_inode * c_inode, void * image
         uint16_t used_extent_count = c_inode->used_extent_count;
         // Iterate through all extents and for each extent iterate through its data blocks
         struct a1fs_extent * c_first_extent = (struct a1fs_extent *)(image +
-                                                   (superblock->data_block * A1FS_BLOCK_SIZE) +
-                                                   (c_inode->extent_table_start * A1FS_BLOCK_SIZE));
+                                                                     (superblock->data_block * A1FS_BLOCK_SIZE) +
+                                                                     (c_inode->extent_table_start * A1FS_BLOCK_SIZE));
 
         for(int i = 0; i < used_extent_count; ++i) {
             // Get current extent
@@ -557,8 +555,8 @@ void remove_dentry(struct a1fs_inode * p_inode, uint16_t c_inode_id, void * imag
     struct a1fs_superblock *superblock = (struct a1fs_superblock *)(image);
     uint16_t used_extent_count = p_inode->used_extent_count;
     struct a1fs_extent * p_first_extent = (struct a1fs_extent *)(image +
-                                           (superblock->data_block * A1FS_BLOCK_SIZE) +
-                                           (p_inode->extent_table_start * A1FS_BLOCK_SIZE));
+                                                                 (superblock->data_block * A1FS_BLOCK_SIZE) +
+                                                                 (p_inode->extent_table_start * A1FS_BLOCK_SIZE));
     int p_number_of_directory_entries = p_inode->size/sizeof(a1fs_dentry);
     int p_explored_dir_entry = 0;
     int nod_in_db = A1FS_BLOCK_SIZE/ sizeof(a1fs_dentry);
@@ -574,8 +572,8 @@ void remove_dentry(struct a1fs_inode * p_inode, uint16_t c_inode_id, void * imag
             while (p_explored_dir_entry < p_number_of_directory_entries && counter < nod_in_db)
             {
                 struct a1fs_dentry * dentry = (struct a1fs_dentry *)(image +
-                                 (superblock->data_block * A1FS_BLOCK_SIZE) + (j * A1FS_BLOCK_SIZE)
-                                 + (counter * sizeof(a1fs_dentry)));
+                                                                     (superblock->data_block * A1FS_BLOCK_SIZE) + (j * A1FS_BLOCK_SIZE)
+                                                                     + (counter * sizeof(a1fs_dentry)));
                 if (dentry ->ino == c_inode_id)
                 {
                     dentry->ino = -1;
@@ -600,7 +598,7 @@ void zero_out_data_block(void * image, int64_t pos)
     for(int i = 0; i < A1FS_BLOCK_SIZE; ++i)
     {
         memcpy(image + (superblock->data_block * A1FS_BLOCK_SIZE) +
-                       (pos * A1FS_BLOCK_SIZE) + i, &zero, sizeof(unsigned char));
+               (pos * A1FS_BLOCK_SIZE) + i, &zero, sizeof(unsigned char));
     }
 
 }
@@ -656,27 +654,10 @@ uint16_t my_ceil(uint32_t a, uint32_t b)
  */
 static int a1fs_getattr(const char *path, struct stat *st)
 {
-	if (strlen(path) >= A1FS_PATH_MAX) return -ENAMETOOLONG;
-	fs_ctx *fs = get_fs();
+    if (strlen(path) >= A1FS_PATH_MAX) return -ENAMETOOLONG;
+    fs_ctx *fs = get_fs();
 
-	memset(st, 0, sizeof(*st));
-
-	//NOTE: This is just a placeholder that allows the file system to be mounted
-	// without errors. You should remove this from your implementation.
-//	if (strcmp(path, "/") == 0) {
-//		//NOTE: all the fields set below are required and must be set according
-//		// to the information stored in the corresponding inode
-//		st->st_mode = S_IFDIR | 0777;
-//		st->st_nlink = 2;
-//		st->st_size = 0;
-//		st->st_blocks = 0 * A1FS_BLOCK_SIZE / 512;
-//		st->st_mtim = (struct timespec){0};
-//		return 0;
-//	}
-
-
-	//TODO: lookup the inode for given path and, if it exists, fill in the
-	// required fields based on the information stored in the inode
+    memset(st, 0, sizeof(*st));
 
     struct a1fs_superblock *superblock = (struct a1fs_superblock *)(fs->image);
     struct a1fs_inode *root_inode = (struct a1fs_inode *)(fs->image + (superblock->inode_table * A1FS_BLOCK_SIZE));
@@ -699,8 +680,8 @@ static int a1fs_getattr(const char *path, struct stat *st)
     }
 
     struct a1fs_extent * first_extent = (struct a1fs_extent *)(fs->image +
-            (superblock->data_block * A1FS_BLOCK_SIZE) +
-            (curr_file_inode->extent_table_start * A1FS_BLOCK_SIZE));
+                                                               (superblock->data_block * A1FS_BLOCK_SIZE) +
+                                                               (curr_file_inode->extent_table_start * A1FS_BLOCK_SIZE));
     bool prev_file = false;
     bool found = false;
 
@@ -732,8 +713,8 @@ static int a1fs_getattr(const char *path, struct stat *st)
                 {
                     // Get current directory entry
                     const struct a1fs_dentry * dentry = (const struct a1fs_dentry *)(fs->image +
-                            (superblock->data_block * A1FS_BLOCK_SIZE)+ (j * A1FS_BLOCK_SIZE) +
-                            (counter * sizeof(a1fs_dentry)));
+                                                                                     (superblock->data_block * A1FS_BLOCK_SIZE)+ (j * A1FS_BLOCK_SIZE) +
+                                                                                     (counter * sizeof(a1fs_dentry)));
 
                     // Check if current directory is valid;i.e directory entry has not been deleted
                     if(dentry->ino != -1)
@@ -744,10 +725,10 @@ static int a1fs_getattr(const char *path, struct stat *st)
                         {
                             curr_inode_id = dentry->ino;
                             curr_file_inode = (struct a1fs_inode *)(fs->image +
-                                  (superblock->inode_table * A1FS_BLOCK_SIZE) + curr_inode_id * sizeof(a1fs_inode));
+                                                                    (superblock->inode_table * A1FS_BLOCK_SIZE) + curr_inode_id * sizeof(a1fs_inode));
                             first_extent = (struct a1fs_extent *)(fs->image +
-                                                        (superblock->data_block * A1FS_BLOCK_SIZE) +
-                                                        (curr_file_inode->extent_table_start * A1FS_BLOCK_SIZE));
+                                                                  (superblock->data_block * A1FS_BLOCK_SIZE) +
+                                                                  (curr_file_inode->extent_table_start * A1FS_BLOCK_SIZE));
                             number_of_directory_entries = curr_file_inode->size/sizeof(a1fs_dentry);
                             explored_dir_entry = 0;
                             used_extent_count = curr_file_inode->used_extent_count;
@@ -804,8 +785,6 @@ static int a1fs_getattr(const char *path, struct stat *st)
     st->st_mtim = curr_file_inode->mtime;
     return 0;
 
-//	(void)fs;
-//	return -ENOSYS;
 }
 
 /**
@@ -831,17 +810,10 @@ static int a1fs_getattr(const char *path, struct stat *st)
 static int a1fs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
                         off_t offset, struct fuse_file_info *fi)
 {
-	(void)offset;// unused
-	(void)fi;// unused
-	fs_ctx *fs = get_fs();
+    (void)offset;// unused
+    (void)fi;// unused
+    fs_ctx *fs = get_fs();
 
-	//NOTE: This is just a placeholder that allows the file system to be mounted
-	// without errors. You should remove this from your implementation.
-//	if (strcmp(path, "/") == 0) {
-//		filler(buf, "." , NULL, 0);
-//		filler(buf, "..", NULL, 0);
-//		return 0;
-//	}
 
     struct a1fs_superblock *superblock = (struct a1fs_superblock *)(fs->image);
     uint16_t inode_id = path_to_inode_id((char* )path, fs->image);
@@ -850,19 +822,14 @@ static int a1fs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 
     // first_extent is gonna be garbage value if extent_table_start == -1
     struct a1fs_extent * first_extent = (struct a1fs_extent *)(fs->image +
-                             (superblock->data_block * A1FS_BLOCK_SIZE) +
-                             (inode->extent_table_start * A1FS_BLOCK_SIZE));
+                                                               (superblock->data_block * A1FS_BLOCK_SIZE) +
+                                                               (inode->extent_table_start * A1FS_BLOCK_SIZE));
     int number_of_directory_entries = inode->size/sizeof(a1fs_dentry);
     int explored_dir_entry = 0;
     int nod_in_db = A1FS_BLOCK_SIZE/ sizeof(a1fs_dentry); /*number of directory entries in one data block*/
 
 
     // once finish traverse while loop, curr_dir will be the inode that inode that represents the path
-//    used_extent_count = curr_dir_inode->used_extent_count;
-//    number_of_directory_entries = curr_dir_inode->size/sizeof(a1fs_dentry);
-//    explored_dir_entry = 0;
-//    nod_in_db = A1FS_BLOCK_SIZE/ sizeof(a1fs_dentry); /*number of directory entries in one data block*/
-//    first_extent = (const struct a1fs_extent *)(fs->image + groupDescriptor->extent_table + curr_dir_inode->extent_table_start);
     filler(buf, "." , NULL, 0);
     filler(buf, "..", NULL, 0);
     for(int i = 0; i < used_extent_count; ++i){
@@ -876,8 +843,8 @@ static int a1fs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
             while (explored_dir_entry < number_of_directory_entries && counter < nod_in_db)
             {
                 const struct a1fs_dentry * dentry = (const struct a1fs_dentry *)(fs->image +
-                        (superblock->data_block * A1FS_BLOCK_SIZE) + (j * A1FS_BLOCK_SIZE)
-                        + (counter * sizeof(a1fs_dentry)));
+                                                                                 (superblock->data_block * A1FS_BLOCK_SIZE) + (j * A1FS_BLOCK_SIZE)
+                                                                                 + (counter * sizeof(a1fs_dentry)));
                 if(dentry->ino != -1)
                 {
                     filler(buf, dentry->name, NULL, 0);
@@ -889,8 +856,7 @@ static int a1fs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
     }
 
     return 0;
-	//TODO: lookup the directory inode for given path and iterate through its
-	// directory entries
+
 
 //	return -ENOSYS;
 }
@@ -916,12 +882,12 @@ static int a1fs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
  */
 static int a1fs_mkdir(const char *path, mode_t mode)
 {
-	mode = mode | S_IFDIR;
-	fs_ctx *fs = get_fs();
-	//TODO: create a directory at given path with given mode
+    mode = mode | S_IFDIR;
+    fs_ctx *fs = get_fs();
+    //TODO: create a directory at given path with given mode
 
-	/* Step 1: Extract parent absolute path and new directory name*/
-	char *pc_1 = malloc(strlen(path) + 1);
+    /* Step 1: Extract parent absolute path and new directory name*/
+    char *pc_1 = malloc(strlen(path) + 1);
     char *pc_2 = malloc(strlen(path) + 1);
     strcpy(pc_1, path);
     strcpy(pc_2, path);
@@ -985,12 +951,12 @@ static int a1fs_mkdir(const char *path, mode_t mode)
     // set available_inode_id bit to 1 in inode bitmap and update superblock free_inode_count
 
 
-	free(pc_1);
-	free(pc_2);
-	(void)path;
-	(void)mode;
-	(void)fs;
-	return 0;
+    free(pc_1);
+    free(pc_2);
+    (void)path;
+    (void)mode;
+    (void)fs;
+    return 0;
 }
 
 /**
@@ -1009,7 +975,7 @@ static int a1fs_mkdir(const char *path, mode_t mode)
  */
 static int a1fs_rmdir(const char *path)
 {
-	fs_ctx *fs = get_fs();
+    fs_ctx *fs = get_fs();
     // Get parent path and parent inode
     // Get directory and directory inode
     char *pc_1 = malloc(strlen(path) + 1);
@@ -1024,7 +990,7 @@ static int a1fs_rmdir(const char *path)
     struct a1fs_inode * c_inode = get_inode_with_id(c_inode_id, fs->image);
     uint16_t used_extent_count = c_inode->used_extent_count;
 
-   // If size is 0 then its empty,
+    // If size is 0 then its empty,
     if(c_inode->size == 0)
     {
         remove_inode(c_inode_id, c_inode, fs->image);
@@ -1034,8 +1000,8 @@ static int a1fs_rmdir(const char *path)
 
     // Iterate through directory entries making sure that each directory entry_ino is -1
     struct a1fs_extent * c_first_extent = (struct a1fs_extent *)(fs->image +
-                                                     (superblock->data_block * A1FS_BLOCK_SIZE) +
-                                                     (c_inode->extent_table_start * A1FS_BLOCK_SIZE));
+                                                                 (superblock->data_block * A1FS_BLOCK_SIZE) +
+                                                                 (c_inode->extent_table_start * A1FS_BLOCK_SIZE));
     int c_number_of_directory_entries = c_inode->size/sizeof(a1fs_dentry);
     int c_explored_dir_entry = 0;
     int nod_in_db = A1FS_BLOCK_SIZE/ sizeof(a1fs_dentry);
@@ -1052,9 +1018,9 @@ static int a1fs_rmdir(const char *path)
             while (c_explored_dir_entry < c_number_of_directory_entries && counter < nod_in_db)
             {
                 const struct a1fs_dentry * dentry = (const struct a1fs_dentry *)(fs->image +
-                                 (superblock->data_block * A1FS_BLOCK_SIZE) + (j * A1FS_BLOCK_SIZE)
-                                 + (counter * sizeof(a1fs_dentry)));
-                if(dentry->ino != -1)
+                                                                                 (superblock->data_block * A1FS_BLOCK_SIZE) + (j * A1FS_BLOCK_SIZE)
+                                                                                 + (counter * sizeof(a1fs_dentry)));
+                if(dentry->ino != -1) // Theres still a valid directory entry
                 {
                     found_valid_dentry = true;
                     break;
@@ -1087,26 +1053,6 @@ static int a1fs_rmdir(const char *path)
 
 
 
-    // if directory size is 0 or all directory entries_ino == -1 in directory entry
-    // perform remove
-    // else return -ENOTEMPTY
-
-
-    // remove subroutine
-    // Go to directory extents, iterate through extents
-    // for each extent go through each datablock and set datablock bitmap to 0 and increase_free_block_count
-
-    // After above instructions are done go to parent directory extents
-    // iterate through its extents and find dir_entry with name == directory
-    // set its inode number to - 1
-
-    // update superblock free_inodes_count
-
-
-	//TODO: remove the directory at given path (only if it's empty)
-	(void)path;
-	(void)fs;
-	return -ENOSYS;
 }
 
 /**
@@ -1130,9 +1076,9 @@ static int a1fs_rmdir(const char *path)
  */
 static int a1fs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 {
-	(void)fi;// unused
-	assert(S_ISREG(mode));
-	fs_ctx *fs = get_fs();
+    (void)fi;// unused
+    assert(S_ISREG(mode));
+    fs_ctx *fs = get_fs();
 
     /* Step 1: Extract parent absolute path and new file name*/
     char *pc_1 = malloc(strlen(path) + 1);
@@ -1169,7 +1115,7 @@ static int a1fs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 
     // Step 3c. Write new_file inode to inode table
     memcpy(fs->image + (superblock->inode_table * A1FS_BLOCK_SIZE) +
-        new_file_inode_id * sizeof(struct a1fs_inode), &new_file, sizeof(a1fs_inode));
+           new_file_inode_id * sizeof(struct a1fs_inode), &new_file, sizeof(a1fs_inode));
 
     // Step 3d. Create new directory entry
     struct a1fs_dentry new_dentry;
@@ -1180,17 +1126,15 @@ static int a1fs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
     int res = write_dir_entry_to_parent(p_inode, &new_dentry, fs->image);
     if(res < 0 )
     {
-        printf("Write dirictory entry failed\n");
         return -ENOSPC;
     }
     set_inode_bitmap(fs->image, new_file_inode_id, 1);
     superblock->free_inodes_count--;
 
-    //TODO: create a file at given path with given mode
-	(void)path;
-	(void)mode;
-	(void)fs;
-	return 0;
+    (void)path;
+    (void)mode;
+    (void)fs;
+    return 0;
 }
 
 /**
@@ -1208,7 +1152,7 @@ static int a1fs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
  */
 static int a1fs_unlink(const char *path)
 {
-	fs_ctx *fs = get_fs();
+    fs_ctx *fs = get_fs();
 
     // Get parent path and parent inode
     // Get directory and directory inode
@@ -1232,7 +1176,6 @@ static int a1fs_unlink(const char *path)
     (void)fs;
     return 0;
 
-	//TODO: remove the file at given path
 }
 
 
@@ -1254,9 +1197,9 @@ static int a1fs_unlink(const char *path)
  */
 static int a1fs_utimens(const char *path, const struct timespec times[2])
 {
-	fs_ctx *fs = get_fs();
+    fs_ctx *fs = get_fs();
 
-	uint16_t  inode_id = path_to_inode_id((char *) path, fs->image);
+    uint16_t  inode_id = path_to_inode_id((char *) path, fs->image);
     struct a1fs_inode * inode = get_inode_with_id(inode_id, fs->image);
     inode->mtime = times[1];
     (void)path;
@@ -1264,11 +1207,6 @@ static int a1fs_utimens(const char *path, const struct timespec times[2])
     (void)fs;
     return 0;
 
-    //TODO: update the modification timestamp (mtime) in the inode for given
-	// path with either the time passed as argument or the current time,
-	// according to the utimensat man page
-
-	return -ENOSYS;
 }
 
 /**
@@ -1291,18 +1229,19 @@ static int a1fs_utimens(const char *path, const struct timespec times[2])
  */
 static int a1fs_truncate(const char *path, off_t size)
 {
-	fs_ctx *fs = get_fs();
+    fs_ctx *fs = get_fs();
     struct a1fs_superblock *superblock = (struct a1fs_superblock *)(fs->image);
     uint16_t inode_id = path_to_inode_id((char *)path, fs->image);
     struct a1fs_inode * inode = get_inode_with_id(inode_id, fs->image);
 
+    // truncate to smaller size
     if ((uint32_t)size < inode->size)
     {
         uint16_t counter = 0;
         bool truncated = false;
         uint16_t extents_visited = 0;
         struct a1fs_extent * first_extent = (struct a1fs_extent *)(fs->image +
-                (superblock->data_block * A1FS_BLOCK_SIZE) + (inode->extent_table_start * A1FS_BLOCK_SIZE));
+                                                                   (superblock->data_block * A1FS_BLOCK_SIZE) + (inode->extent_table_start * A1FS_BLOCK_SIZE));
         struct a1fs_extent * curr_extent;
 
         // Iterate through extents of the file
@@ -1327,7 +1266,7 @@ static int a1fs_truncate(const char *path, off_t size)
                         inode->size = 0;
                         truncated = true;
                     }
-                    else if (counter >= size)
+                    else if (counter >= size) // Found Last Data Block in Extent
                     {
                         curr_extent->count = j + 1 - start;
                         inode->used_extent_count = extents_visited;
@@ -1348,7 +1287,7 @@ static int a1fs_truncate(const char *path, off_t size)
 
 
     }
-    else if((uint32_t)size > inode->size)
+    else if((uint32_t)size > inode->size) // Truncate to a bigger size
     {
         // Calculating how many data blocks are require to truncate it to bigger size
         uint16_t blocks_required;
@@ -1370,23 +1309,19 @@ static int a1fs_truncate(const char *path, off_t size)
             }
 
         }
-        printf("Blocks_required: %u\n", blocks_required);
 
         // Make sure that we have enough data blocks in our file system to perform truncate call
         if(inode->extent_table_start == -1) // This is the case when file does not have an extent_table allocated
         {
             if((uint32_t)(blocks_required + 1) > superblock->free_blocks_count)
             {
-                printf("Not enough DB\n");
                 return -ENOSPC;
             }
         }
         else if (blocks_required > superblock->free_blocks_count)
         {
-            printf("Not enough DB\n");
             return -ENOSPC;
         }
-        printf("Got here\n");
 
         // allocated the data blocks required for truncate
         int64_t datablocks[blocks_required];
@@ -1409,7 +1344,23 @@ static int a1fs_truncate(const char *path, off_t size)
         int extents_required = 0;
         if(blocks_required == 0)
         {
-            extents_required = 0;
+            // Zero out last Datab Bock if applicable
+            if(inode->used_extent_count != 0)
+            {
+                struct a1fs_extent * last_extent = (struct a1fs_extent *)(fs->image +
+                                                                          (superblock->data_block * A1FS_BLOCK_SIZE) +
+                                                                          (inode->extent_table_start * A1FS_BLOCK_SIZE) +
+                                                                          ((inode->used_extent_count - 1) * sizeof(struct a1fs_extent)));
+
+                // Zero out excess bytes of last data block
+                uint16_t  last_datablock = last_extent->start + last_extent->count - 1;
+                for(int i = A1FS_BLOCK_SIZE - excess; i < A1FS_BLOCK_SIZE; ++i)
+                {
+                    unsigned char zero = 0;
+                    memcpy(fs->image + (superblock->data_block * A1FS_BLOCK_SIZE) +
+                           (last_datablock * A1FS_BLOCK_SIZE) + i, &zero, sizeof(unsigned char ));
+                }
+            }
             return 0;
         }
         else
@@ -1429,7 +1380,6 @@ static int a1fs_truncate(const char *path, off_t size)
                     set_data_block_bitmap(fs->image, datablocks[i] , 0);
                     superblock->free_blocks_count++;
                 }
-                printf("Not enough extents!!\n");
                 return -ENOSPC;
             }
 
@@ -1457,9 +1407,9 @@ static int a1fs_truncate(const char *path, off_t size)
             if(inode->extent_table_start != - 1)
             {
                 struct a1fs_extent * last_extent = (struct a1fs_extent *)(fs->image +
-                        (superblock->data_block * A1FS_BLOCK_SIZE) +
-                        (inode->extent_table_start * A1FS_BLOCK_SIZE) +
-                        ((inode->used_extent_count - 1) * sizeof(struct a1fs_extent)));
+                                                                          (superblock->data_block * A1FS_BLOCK_SIZE) +
+                                                                          (inode->extent_table_start * A1FS_BLOCK_SIZE) +
+                                                                          ((inode->used_extent_count - 1) * sizeof(struct a1fs_extent)));
 
                 // Zero out excess bytes of last data block
                 uint16_t  last_datablock = last_extent->start + last_extent->count - 1;
@@ -1467,9 +1417,10 @@ static int a1fs_truncate(const char *path, off_t size)
                 {
                     unsigned char zero = 0;
                     memcpy(fs->image + (superblock->data_block * A1FS_BLOCK_SIZE) +
-                    (last_datablock * A1FS_BLOCK_SIZE) + i, &zero, sizeof(unsigned char ));
+                           (last_datablock * A1FS_BLOCK_SIZE) + i, &zero, sizeof(unsigned char ));
                 }
-                // Go through extents see if any extents.start matches last_extent.start + last_extent.count
+                // Go through extents see if any extents.start matches last_extent.start + last_extent.count, i.e
+                // increase length of last extent
                 bool extend_last_extent = false;
                 // Add extents to extent table
                 for(int i = 0; i < extents_required; ++i)
@@ -1509,9 +1460,6 @@ static int a1fs_truncate(const char *path, off_t size)
                     inode->used_extent_count += extents_required;
                 }
                 inode->size = size;
-                printf("free data blocks: %lu\n", superblock->free_blocks_count);
-                printf("inode used_extent_count: %u\n",inode->used_extent_count);
-                printf("-----------------------------------------------\n");
                 return 0;
 
             }
@@ -1534,10 +1482,7 @@ static int a1fs_truncate(const char *path, off_t size)
                 }
                 // Update inode data
                 inode->used_extent_count += extents_required;
-                inode->size =  size;
-                printf("free data blocks: %lu\n", superblock->free_blocks_count);
-                printf("inode used_extent_count: %u\n",inode->used_extent_count);
-                printf("-----------------------------------------------\n");
+                inode->size = size;
                 return 0;
             }
 
@@ -1550,89 +1495,6 @@ static int a1fs_truncate(const char *path, off_t size)
         return 0;
     }
 
-
-
-
-
-
-
-
-
-	//TODO: set new file size, possibly "zeroing out" the uninitialized range
-	// if size < file size
-	/*
-	 * counter = 0
-	 * truncated = false
-	 * number_of_extents_visited = 0
-	 * iterate through extents of file
-	 *   number_of_extents_visited++
-	 *   for each extent, iterate through its data blocks
-	 *     if not truncated
-	 *       counter+= 4096
-	 *       if size == 0
-	 *          set inode->extent_table_start to -1
-	 *          set inode->used_extent_count to 0
-	 *          set inode->size to 0
-	 *          set truncated = true
-	 *       elif counter > size
-	 *         change current extent->count to right value
-	 *         set inode used extent_counts to numbers_of_extents_visited
-	 *         set truncated = true
-	 *     if truncated
-	 *        set_data_block_bitmap(image ,pos, 0)
-	 *        superblock->freeblocks++
-	 * */
-	// If size > file size
-	/*
-	 * blocks_required = my_ceil((size - file size)/4096)
-	 * if file_size % 4096 == 0
-	 *   blocks_required = my_ceil((size - file size)/4096)
-	 * else
-	 *   excess = 4096 - file_size % 4096
-	 *   if size-file_size <= excess
-	 *     blocks_required = 0
-	 *   else
-	 *     blocks_required = my_ceil((size - excess - file_size)/4096)
-	 *
-	 * if(inode->extent_table_start == -1)
-	 *    if (blocks_required + 1 > superblock->freeblocks)
-	 *    return -ENOSPC
-	 * elif (blocks_required > superblock->freeblocks)
-	 *    return -ENOSPC
-	 *
-	 * int datablocks[blocks_required]
-	 * for i in range(blocks_required)
-	 *   pos = available_data_blocks
-	 *   set_data_block_bitmap(pos)
-	 *   dadtablocks[i] = pos
-	 *
-	 * Convert int datablocks[blocks_required] into a list of extents to do this
-	 * 1. Sort int datablocks[blocks_required] in increasing order
-	 * 2. Do 2 passes of int datablokcs[blocks_required]
-	 * 2a. First pass check how many extents we need and at the same time zero out the data in these data blocks
-	 * 2b. Once we know how many extents we need, create struct a1fs_extent extent_arr[# of extents]
-	 * 2c. Second pass, create the extents and store it into array
-	 *
-	 * if # of extents + inode->used_extent_count > 512
-	 *    free all datablocks from int datablocks[blocks_required]
-	 *    return -ENOSPC
-	 * else:
-	 *
-	 *    if extent_table_start == -1:
-	 *      pos = available_data_blocks
-	 *      set_data_block_bitmap(pos)
-	 *      set inode->extent_table_start = pos
-	 *   add the extents to the inode
-	 *   set inode->used_extent_count += # of extents
-     *   set inode->size = size
-	 *
-	 * */
-
-
-	(void)path;
-	(void)size;
-	(void)fs;
-	return -ENOSYS;
 }
 
 
@@ -1660,8 +1522,8 @@ static int a1fs_truncate(const char *path, off_t size)
 static int a1fs_read(const char *path, char *buf, size_t size, off_t offset,
                      struct fuse_file_info *fi)
 {
-	(void)fi;// unused
-	fs_ctx *fs = get_fs();
+    (void)fi;// unused
+    fs_ctx *fs = get_fs();
     struct a1fs_superblock * superblock = (struct a1fs_superblock *)(fs->image);
     uint16_t inode_id = path_to_inode_id((char *)path, fs->image);
     struct a1fs_inode * inode =  get_inode_with_id(inode_id, fs->image);
@@ -1678,8 +1540,8 @@ static int a1fs_read(const char *path, char *buf, size_t size, off_t offset,
     uint16_t datablk_traversed = 0;
     int16_t datablock_pos = -1;
     struct a1fs_extent * first_extent = (struct a1fs_extent *)(fs->image +
-                                                         (superblock->data_block * A1FS_BLOCK_SIZE) +
-                                                         (inode->extent_table_start * A1FS_BLOCK_SIZE));
+                                                               (superblock->data_block * A1FS_BLOCK_SIZE) +
+                                                               (inode->extent_table_start * A1FS_BLOCK_SIZE));
     uint16_t bytes_visited = 0;
     for(int i = 0; i < inode->used_extent_count; ++i)
     {
@@ -1703,7 +1565,7 @@ static int a1fs_read(const char *path, char *buf, size_t size, off_t offset,
     }
 
     char * inode_offset_byte = (char *)(fs->image +
-              (superblock->data_block * A1FS_BLOCK_SIZE) + (datablock_pos * A1FS_BLOCK_SIZE) + which_byte);
+                                        (superblock->data_block * A1FS_BLOCK_SIZE) + (datablock_pos * A1FS_BLOCK_SIZE) + which_byte);
     bytes_visited += which_byte;
 
     uint16_t read = 0;
@@ -1719,14 +1581,6 @@ static int a1fs_read(const char *path, char *buf, size_t size, off_t offset,
     }
     return size;
 
-
-	//TODO: read data from the file at given offset into the buffer
-	(void)path;
-	(void)buf;
-	(void)size;
-	(void)offset;
-	(void)fs;
-	return -ENOSYS;
 }
 
 /**
@@ -1755,10 +1609,10 @@ static int a1fs_read(const char *path, char *buf, size_t size, off_t offset,
 static int a1fs_write(const char *path, const char *buf, size_t size,
                       off_t offset, struct fuse_file_info *fi)
 {
-	(void)fi;// unused
-	fs_ctx *fs = get_fs();
+    (void)fi;// unused
+    fs_ctx *fs = get_fs();
 
-	struct a1fs_superblock * superblock = (struct a1fs_superblock *)(fs->image);
+    struct a1fs_superblock * superblock = (struct a1fs_superblock *)(fs->image);
     uint16_t inode_id = path_to_inode_id((char *)path, fs->image);
     struct a1fs_inode * inode =  get_inode_with_id(inode_id, fs->image);
 
@@ -1769,7 +1623,6 @@ static int a1fs_write(const char *path, const char *buf, size_t size,
         int res = a1fs_truncate(path, (offset + size));
         if(res != 0)
         {
-            printf("truncate failed\n");
             return -ENOSPC;
         }
     }
@@ -1777,8 +1630,8 @@ static int a1fs_write(const char *path, const char *buf, size_t size,
     uint16_t datablk_traversed = 0;
     int16_t datablock_pos = -1;
     struct a1fs_extent * first_extent = (struct a1fs_extent *)(fs->image +
-                                     (superblock->data_block * A1FS_BLOCK_SIZE) +
-                                     (inode->extent_table_start * A1FS_BLOCK_SIZE));
+                                                               (superblock->data_block * A1FS_BLOCK_SIZE) +
+                                                               (inode->extent_table_start * A1FS_BLOCK_SIZE));
     for(int i = 0; i < inode->used_extent_count; ++i)
     {
         struct a1fs_extent * extent = (first_extent + i);
@@ -1800,7 +1653,7 @@ static int a1fs_write(const char *path, const char *buf, size_t size,
     }
 
     unsigned char * inode_offset_byte = (unsigned char *)(fs->image +
-            (superblock->data_block * A1FS_BLOCK_SIZE) + (datablock_pos * A1FS_BLOCK_SIZE) + which_byte);
+                                                          (superblock->data_block * A1FS_BLOCK_SIZE) + (datablock_pos * A1FS_BLOCK_SIZE) + which_byte);
 
     for (int i = 0; i < (int)size; ++i)
     {
@@ -1808,46 +1661,35 @@ static int a1fs_write(const char *path, const char *buf, size_t size,
     }
     return size;
 
-
-
-
-	//TODO: write data from the buffer into the file at given offset, possibly
-	// "zeroing out" the uninitialized range
-	(void)path;
-	(void)buf;
-	(void)size;
-	(void)offset;
-	(void)fs;
-	return -ENOSYS;
 }
 
 
 static struct fuse_operations a1fs_ops = {
-	.destroy  = a1fs_destroy,
-	.statfs   = a1fs_statfs,
-	.getattr  = a1fs_getattr,
-	.readdir  = a1fs_readdir,
-	.mkdir    = a1fs_mkdir,
-	.rmdir    = a1fs_rmdir,
-	.create   = a1fs_create,
-	.unlink   = a1fs_unlink,
-	.utimens  = a1fs_utimens,
-	.truncate = a1fs_truncate,
-	.read     = a1fs_read,
-	.write    = a1fs_write,
+        .destroy  = a1fs_destroy,
+        .statfs   = a1fs_statfs,
+        .getattr  = a1fs_getattr,
+        .readdir  = a1fs_readdir,
+        .mkdir    = a1fs_mkdir,
+        .rmdir    = a1fs_rmdir,
+        .create   = a1fs_create,
+        .unlink   = a1fs_unlink,
+        .utimens  = a1fs_utimens,
+        .truncate = a1fs_truncate,
+        .read     = a1fs_read,
+        .write    = a1fs_write,
 };
 
 int main(int argc, char *argv[])
 {
-	a1fs_opts opts = {0};// defaults are all 0
-	struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
-	if (!a1fs_opt_parse(&args, &opts)) return 1;
+    a1fs_opts opts = {0};// defaults are all 0
+    struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
+    if (!a1fs_opt_parse(&args, &opts)) return 1;
 
-	fs_ctx fs = {0};
-	if (!a1fs_init(&fs, &opts)) {
-		fprintf(stderr, "Failed to mount the file system\n");
-		return 1;
-	}
+    fs_ctx fs = {0};
+    if (!a1fs_init(&fs, &opts)) {
+        fprintf(stderr, "Failed to mount the file system\n");
+        return 1;
+    }
 
-	return fuse_main(args.argc, args.argv, &a1fs_ops, &fs);
+    return fuse_main(args.argc, args.argv, &a1fs_ops, &fs);
 }
